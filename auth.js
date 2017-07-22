@@ -36,7 +36,7 @@ var authorizeURL = spotifyApi.createAuthorizeURL(scopes, state);
 
 app.get('/', function(request, response) {
 
-  var access_token = '';
+  // var access_token = '';
   
   // Retrieve an access token via authorization code workflow 
   response.send(authorizeURL);
@@ -44,8 +44,28 @@ app.get('/', function(request, response) {
 });
 
 app.get('/callback', function(request, response){
-  var code = request.query.code
-  response.send(code)
+  var code = request.query.code;
+  var state = request.query.state;
+  console.log(code);
+  
+  if (state === 'SPACEBROWNS'){
+    
+    spotifyApi.authorizationCodeGrant(code).then(function(data){
+
+      console.log('The token expires in ' + data.body['expires_in']);
+      console.log('The acccess token is ' + data.body['access_token']);
+      console.log('The refresh token is ' + data.body['refresh_token']);
+
+      spotifyApi.setAccessToken(data.body['access_token']);
+      spotifyApi.setRefreshToken(data.body['refresh_token']);
+
+    }, function(err){
+      response.send(err);
+      console.log("Something went wrong", err);
+    });
+  }else {
+    response.send("I didn't send you here... please leave");
+  }
 })
 
 
