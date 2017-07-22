@@ -14,13 +14,13 @@ app.set('port', (process.env.PORT || 5000));
 app.use(express.static(__dirname + '/public'));
 
 //CORS
-// app.use(function(req, res, next) {
-//   res.header("Access-Control-Allow-Origin", "*");
-//   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-//   next();
-// });
+app.use(function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
+});
 var scopes = ['playlist-modify-public', 'user-top-read'],
-    redirectUri = 'https://localhost:5000/callback',
+    redirectUri = 'http://localhost:5000/callback',
     clientId = '582fe57ab3604c3fa3356b6ad0c7e446',
     state = 'SPACEBROWNS'
 
@@ -34,17 +34,19 @@ var spotifyApi = new SpotifyWebApi({
 
 var authorizeURL = spotifyApi.createAuthorizeURL(scopes, state);
 
-console.log(scopes);
-console.log(authorizeURL);
-
-app.get('/auth', function(request, response) {
+app.get('/', function(request, response) {
 
   var access_token = '';
+  
   // Retrieve an access token via authorization code workflow 
-  console.log(scopes);
-  console.log(authorizeURL);
+  response.send(authorizeURL);
   
 });
+
+app.get('/callback', function(request, response){
+  var code = request.query.code
+  response.send(code)
+})
 
 
 app.listen(app.get('port'), function() {
