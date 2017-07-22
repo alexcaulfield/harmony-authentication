@@ -19,14 +19,31 @@ app.use(express.static(__dirname + '/public'));
 //   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
 //   next();
 // });
+var scopes = ['playlist-modify-public', 'user-top-read'],
+    redirectUri = 'https://localhost:5000/callback',
+    clientId = '582fe57ab3604c3fa3356b6ad0c7e446',
+    state = 'SPACEBROWNS'
+
+// clientId : '582fe57ab3604c3fa3356b6ad0c7e446',
+// clientSecret : '3f04f5630aa04a889157d3cbccc8b1d3'
 
 var spotifyApi = new SpotifyWebApi({
-  clientId : '582fe57ab3604c3fa3356b6ad0c7e446',
-  clientSecret : '3f04f5630aa04a889157d3cbccc8b1d3'
+  redirectUri: redirectUri,
+  clientId: clientId
 });
+
+var authorizeURL = spotifyApi.createAuthorizeURL(scopes, state);
+
+console.log(scopes);
+console.log(authorizeURL);
 
 app.get('/auth', function(request, response) {
 
+  var access_token = '';
+  // Retrieve an access token via authorization code workflow 
+  console.log(scopes);
+  console.log(authorizeURL);
+  
 });
 
 
