@@ -88,6 +88,19 @@ var relatedArtistsIds = [];
 var playlistTrackUris = [];
 var playlistId;
 
+app.get('/userInfo', function(request, response) {
+  response.send(spotifyApi.getAccessToken());
+});
+
+app.get('/trackInfo', function(request, response) {
+  spotifyApi.getAudioFeaturesForTrack(request.query.id)
+  .then(function(data) {
+    response.send(data.body);
+  }, function(err) {
+    console.log(err);
+  });
+});
+
 app.get('/findArtist', function(request, response) {
   spotifyApi.searchArtists('The Chainsmokers')
   .then(function(data) {
