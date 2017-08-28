@@ -102,10 +102,13 @@ app.get('/findArtist', function(request, response) {
     me = data.body;
   });
 
-  spotifyApi.searchArtists('The Chainsmokers')
+  artistName = request.query.artist
+  playlistName = request.query.playlistName
+
+  spotifyApi.searchArtists(artistName)
   .then(function(data) {
     artistId = data.body.artists.items[0].id;
-    spotifyApi.createPlaylist(me.id, 'Test Playlist', { 'public' : true })
+    spotifyApi.createPlaylist(me.id, playlistName, { 'public' : true })
       .then(function(data) {
         playlistId = data.body.id;
         spotifyApi.getArtistRelatedArtists(artistId)
@@ -129,9 +132,6 @@ app.get('/findArtist', function(request, response) {
                 response.send(addTracks(me));
               }
             }, 100);
-            
-            // response.send(timeout());
-
           }, function(err) {
             console.log(err);
           });
