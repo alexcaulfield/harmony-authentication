@@ -35,14 +35,8 @@ var tokenExpirationEpoch;
 var authorizeURL = spotifyApi.createAuthorizeURL(scopes, state);
 
 app.get('/', function(request, response) {
-  console.log('in get /')
-  console.log(authorizeURL)
-
-  // var access_token = '';
-
   // Retrieve an access token via authorization code workflow
   response.send(authorizeURL);
-
 });
 
 app.get('/callback', function(request, response){
@@ -60,11 +54,11 @@ app.get('/callback', function(request, response){
       spotifyApi.setAccessToken(data.body['access_token']);
       spotifyApi.setRefreshToken(data.body['refresh_token']);
 
-    // Save the amount of seconds until the access token expired
-    tokenExpirationEpoch = (new Date().getTime() / 1000) + data.body['expires_in'];
-    console.log('Retrieved token. It expires in ' + Math.floor(tokenExpirationEpoch - new Date().getTime() / 1000) + ' seconds!');
+      // Save the amount of seconds until the access token expired
+      tokenExpirationEpoch = (new Date().getTime() / 1000) + data.body['expires_in'];
+      console.log('Retrieved token. It expires in ' + Math.floor(tokenExpirationEpoch - new Date().getTime() / 1000) + ' seconds!');
 
-      response.redirect("/finished");
+      response.send(`<script>window.close();</script>`);
 
     }, function(err){
       response.send(err);
@@ -102,12 +96,17 @@ app.get('/trackInfo', function(request, response) {
 });
 
 app.get('/findArtist', function(request, response) {
+
+  var me;
+  spotifyApi.getMe().then(function(data){
+    me = data.body;
+  });
+
   spotifyApi.searchArtists('The Chainsmokers')
   .then(function(data) {
     artistId = data.body.artists.items[0].id;
-    spotifyApi.createPlaylist('cauf', 'Test Playlist', { 'public' : true })
+    spotifyApi.createPlaylist(me.id, 'Test Playlist', { 'public' : true })
       .then(function(data) {
-        console.log('Created playlist!');
         playlistId = data.body.id;
         spotifyApi.getArtistRelatedArtists(artistId)
           .then(function(data) {
@@ -118,22 +117,21 @@ app.get('/findArtist', function(request, response) {
               spotifyApi.getArtistTopTracks(relatedArtistsIds[k], 'US')
                 .then(function(data) {
                   for (var j = 0; j < 5; j++) {
-                    // console.log(data.body.tracks[j]);
                     playlistTrackUris.push(data.body.tracks[j].uri);
                   }
-                  // response.send(data.body.tracks);
                 }, function(err) {
                   console.log(err);
                 });
             }
-            // console.log('out of for loop and in RelatedArtists');
-            // console.log(playlistTrackUris);
-            spotifyApi.addTracksToPlaylist('cauf', playlistId, playlistTrackUris)
-              .then(function(data) {
-                console.log('Added tracks to playlist!');
-              }, function(err) {
-                console.log('Something went wrong!', err);
-              });
+            var timeout = setInterval(function(){
+              if(playlistTrackUris.length >= 25){
+                clearInterval(timeout);
+                response.send(addTracks(me));
+              }
+            }, 100);
+            
+            // response.send(timeout());
+
           }, function(err) {
             console.log(err);
           });
@@ -144,6 +142,16 @@ app.get('/findArtist', function(request, response) {
     console.error(err);
   });
 });
+
+var addTracks = function(me){
+  spotifyApi.addTracksToPlaylist(me.id, playlistId, playlistTrackUris)
+    .then(function(data) {
+  }, function(err) {
+      console.log('Something went wrong!', err);
+  });
+
+  return("All Done :)");
+}
 
 var topTracks = function(artist) {
   spotifyApi.getArtistTopTracks(artist, 'US')
